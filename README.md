@@ -7,7 +7,8 @@ Helper library for connecting nodes together.
 
 ```erlang
 [
-  {gen_cluster, [{type, {list, [b, c]}},
-                 {refresh_interval_ms, undefined}]}
+ {gen_cluster, [{discovery, {gc_static ['a@rosa', 'b@rosa']}},
+                {dist, {gc_dist_erl, []}},
+                {refresh_interval_ms, 5000}]
 ].
 ```

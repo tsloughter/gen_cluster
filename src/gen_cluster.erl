@@ -95,8 +95,8 @@ code_change(_, _OldState, Data, _) ->
 
 -spec data_from_config([{atom(), dynamic()}]) -> #data{}.
 data_from_config(Configuration) ->
-    Discovery = init_callback(proplists:get_value(discovery_mod, Configuration, {gc_static, ['a@rosa', 'b@rosa']})),
-    Dist = init_callback(proplists:get_value(dist_mod, Configuration, {gc_dist_erl, []})),
+    Discovery = init_callback(proplists:get_value(discovery, Configuration, {gc_static, ['a@rosa', 'b@rosa']})),
+    Dist = init_callback(proplists:get_value(dist, Configuration, {gc_dist_erl, []})),
     RefreshIntervalMs =
         proplists:get_value(refresh_interval_ms,
                             Configuration,
