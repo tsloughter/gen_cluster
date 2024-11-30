@@ -1,5 +1,7 @@
 -module(gc_dist_erl).
 
+-behaviour(gc_dist).
+
 -export([init/1,
          members/1,
          connect/2,
