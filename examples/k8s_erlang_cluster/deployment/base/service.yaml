@@ -1,0 +1,11 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: k8s-erlang-cluster
+spec:
+  clusterIP: None
+  ports:
+  - protocol: TCP
+    port: 39135
+    targetPort: 39135
+    name: dist-erl

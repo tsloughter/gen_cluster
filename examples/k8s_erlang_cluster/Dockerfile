@@ -1,0 +1,23 @@
+FROM erlang:27 AS builder
+
+WORKDIR /usr/src/app
+COPY . /usr/src/app
+
+RUN rebar3 as prod tar
+
+RUN mkdir -p /opt/rel
+RUN tar -zxvf /usr/src/app/_build/prod/rel/*/*.tar.gz -C /opt/rel
+
+FROM debian:bookworm
+
+RUN apt-get update && apt-get install --no-install-recommends -y openssl ncurses-bin
+
+WORKDIR /opt/k8s_erlang_cluster
+
+ENV RELX_REPLACE_OS_VARS=true
+ENV COOKIE=k8s_erlang_cluster
+
+COPY --from=builder /opt/rel /opt/k8s_erlang_cluster
+
+ENTRYPOINT ["/opt/k8s_erlang_cluster/bin/k8s_erlang_cluster"]
+CMD ["foreground"]

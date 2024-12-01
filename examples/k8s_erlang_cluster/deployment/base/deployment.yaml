@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-erlang-cluster
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: k8s-erlang-cluster
+        image: localhost:5005/k8s_erlang_cluster:latest
+        ports:
+        - containerPort: 39135
+        env:
+        - name: ERL_DIST_PORT
+          value: "39135"
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+                fieldPath: status.podIP
