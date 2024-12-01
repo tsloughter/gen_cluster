@@ -31,8 +31,15 @@ init([]) ->
         intensity => 0,
         period => 1
     },
-    ChildSpecs = [#{id => gen_cluster,
-                    start => {gen_cluster, start_link, []}}],
+
+    ChildSpecs = case application:get_all_env(gen_cluster) of
+                     [] ->
+                         [];
+                     Config ->
+                         [#{id => gen_cluster,
+                            start => {gen_cluster, start_link, [Config]}}]
+                 end,
+
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions

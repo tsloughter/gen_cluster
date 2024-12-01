@@ -6,7 +6,7 @@
 
 -behaviour(gen_statem).
 
--export([start_link/0]).
+-export([start_link/1]).
 
 -export([init/1,
          active/3,
@@ -54,20 +54,15 @@
 -define(SERVER, ?MODULE).
 -define(DEFAULT_REFRESH_INTERVAL_MS, 5000).
 
-start_link() ->
-    gen_statem:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(Configuration) ->
+    gen_statem:start_link({local, ?SERVER}, ?MODULE, [Configuration], []).
 
 callback_mode() ->
     [state_functions].
 
-init([]) ->
-    case application:get_all_env(gen_cluster) of
-        [] ->
-            ignore;
-        Configuration ->
-            Data = data_from_config(Configuration),
-            {ok, inactive, Data, [{next_event, internal, refresh}]}
-    end.
+init([Configuration]) ->
+    Data = data_from_config(Configuration),
+    {ok, inactive, Data, [{next_event, internal, refresh}]}.
 
 inactive(internal, refresh, Data=#data{refresh_interval_ms=RefreshIntervalMs}) ->
     Data1 = handle_refresh(Data),
