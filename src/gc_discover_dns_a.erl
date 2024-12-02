@@ -47,21 +47,31 @@ peers(#state{node_name=NodeName,
 -spec handle_ip(inet:ip_address(), dns_name(), host_type(), gen_cluster:peers())
                -> gen_cluster:peers().
 handle_ip(IP, NodeName, HostType, PeersAcc) ->
-    {ok, Host} = parse_record(IP, HostType),
-    Node = list_to_atom(string:join([NodeName, Host], "@")),
-    sets:add_element(#{node => Node}, PeersAcc).
+    case parse_ip(IP, HostType) of
+        {ok, Host} ->
+            %% elp:ignore W0023
+            Node = list_to_atom(string:join([NodeName, Host], "@")),
+            sets:add_element(#{node => Node}, PeersAcc);
+        {error, _} ->
+            %% TODO: log a debug/info/warning
+            PeersAcc
+    end.
 
--spec parse_record(inet:ip_address(), host_type()) -> {ok, string()} | {error, term()}.
-parse_record(Ip, ip) ->
-    case inet:ntoa(Ip) of
+-spec parse_ip(inet:ip_address(), host_type()) -> {ok, string()} | {error, term()}.
+parse_ip(IP, ip) ->
+    case inet:ntoa(IP) of
         {error, einval} ->
             {error, einval};
         String ->
             {ok, String}
     end;
-parse_record(Ip, hostname) ->
-    {ok, {hostent, Host, _, _, _, _}} = inet_res:gethostbyaddr(Ip),
-    {ok, to_string(Host)}.
+parse_ip(IP, hostname) ->
+    case inet_res:gethostbyaddr(IP) of
+        {ok, #hostent{h_name=Host}} ->
+            {ok, to_string(Host)};
+        {error, _}=Error ->
+            Error
+    end.
 
 to_string(Host) when is_atom(Host) ->
     atom_to_list(Host);
