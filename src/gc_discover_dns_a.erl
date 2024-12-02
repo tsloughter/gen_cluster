@@ -8,50 +8,46 @@
 -type host_type() :: ip | hostname.
 -type dns_name()  :: string(). %% unexported: inet_res:dns_name()
 
--record(state, {node_name   :: string(),
-                domain      :: dns_name(),
-                host_type   :: host_type(),
-                lookup_opts :: [inet_res:res_option()]}).
+-record(state, {node_name      :: string(),
+                domain         :: dns_name(),
+                host_type      :: host_type(),
+                lookup_timeout :: erlang:timeout()}).
 
--spec init(#{domain      := dns_name(),
-             host_type   => host_type(),
-             lookup_opts => [inet_res:res_option()]}) -> {ok, #state{}}.
+-include_lib("kernel/include/inet.hrl").
+
+-spec init(#{domain         := dns_name(),
+             host_type      => host_type(),
+             lookup_timeout => erlang:timeout()}) -> {ok, #state{}}.
 init(Opts=#{domain := Domain}) ->
-    LookupOpts = maps:get(lookup_opts, Opts, []),
+    Timeout = maps:get(lookup_timeout, Opts, 5000),
     HostType = maps:get(host_type, Opts, ip),
     [NodeName, _] = string:split(atom_to_list(node()), "@"),
     {ok, #state{node_name=NodeName,
                 domain=Domain,
                 host_type=HostType,
-                lookup_opts=LookupOpts}}.
+                lookup_timeout=Timeout}}.
 
 -spec peers(#state{}) -> gen_cluster:peers().
 peers(#state{node_name=NodeName,
              domain=Domain,
              host_type=HostType,
-             lookup_opts=LookupOpts}) ->
-    LookupResults = inet_res:lookup(Domain, in, a, LookupOpts),
-    %% the `is_list' is for making eqwalizer happy
-    lists:foldl(fun(Ip={A, B, C, D}, PeersAcc) when is_integer(A) ,
-                                                 is_integer(B) ,
-                                                 is_integer(C) ,
-                                                 is_integer(D) ->
-                        handle_ip(Ip, NodeName, HostType, PeersAcc);
-                   (Ip={A, B, C, D, E, F, G, H}, PeersAcc) when is_integer(A) ,
-                                                   is_integer(B) ,
-                                                   is_integer(C) ,
-                                                   is_integer(D) ,
-                                                   is_integer(E) ,
-                                                   is_integer(F) ,
-                                                   is_integer(G) ,
-                                                   is_integer(H)  ->
-                        handle_ip(Ip, NodeName, HostType, PeersAcc)
-                end, sets:new([{version, 2}]), LookupResults).
+             lookup_timeout=Timeout}) ->
+    Set = sets:new([{version, 2}]),
+    case inet_res:getbyname(Domain, a, Timeout) of
+        {ok, #hostent{h_addr_list=IPs}} ->
+            lists:foldl(fun(IP, PeersAcc) ->
+                                handle_ip(IP, NodeName, HostType, PeersAcc)
+                        end, Set, IPs);
+        {error, _} ->
+            Set
+    end.
 
 %%
 
-handle_ip(Ip, NodeName, HostType, PeersAcc) ->
-    {ok, Host} = parse_record(Ip, HostType),
+-spec handle_ip(inet:ip_address(), dns_name(), host_type(), gen_cluster:peers())
+               -> gen_cluster:peers().
+handle_ip(IP, NodeName, HostType, PeersAcc) ->
+    {ok, Host} = parse_record(IP, HostType),
     Node = list_to_atom(string:join([NodeName, Host], "@")),
     sets:add_element(#{node => Node}, PeersAcc).
 
