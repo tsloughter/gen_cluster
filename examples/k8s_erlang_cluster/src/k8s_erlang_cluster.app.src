@@ -5,7 +5,8 @@
     {mod, {k8s_erlang_cluster_app, []}},
     {applications, [
         kernel,
-        stdlib
+        stdlib,
+        gen_cluster
     ]},
     {env, []},
     {modules, []},

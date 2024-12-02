@@ -9,6 +9,7 @@ spec:
       containers:
       - name: k8s-erlang-cluster
         image: localhost:5005/k8s_erlang_cluster:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 39135
         env:

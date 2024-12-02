@@ -1,1 +1,9 @@
-[].
+[{<<"eqwalizer_support">>,
+  {git_subdir,"https://github.com/whatsapp/eqwalizer.git",
+              {ref,"759af3c1ab1062bcafbc4a528634f958d85a69f0"},
+              "eqwalizer_support"},
+  1},
+ {<<"gen_cluster">>,
+  {git,"https://github.com/tsloughter/gen_cluster",
+       {ref,"3501a686c035cd7fab3e41a4fc09f2eeb6efa0f6"}},
+  0}].
