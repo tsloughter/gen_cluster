@@ -1,5 +1,5 @@
 {application, gen_cluster, [
-    {description, "An OTP application"},
+    {description, "Discover, connect and reconnect Erlang nodes"},
     {vsn, "0.1.0"},
     {registered, []},
     {mod, {gen_cluster_app, []}},

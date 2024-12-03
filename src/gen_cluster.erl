@@ -42,20 +42,14 @@
               peer/0,
               peers/0]).
 
-%% type             :: {static, [node_address()]}
-%%                                  | {fqdns, string()}
-%%                                  | {srv, string()}
-%%                                  | undefined,
-%%                seen                :: sets:set(),
 -record(data, {discovery           :: {module(), cb_state()},
                dist                :: {module(), cb_state()},
                refresh_interval_ms :: integer() | infinity}).
 
--define(SERVER, ?MODULE).
 -define(DEFAULT_REFRESH_INTERVAL_MS, 5000).
 
 start_link(Configuration) ->
-    gen_statem:start_link({local, ?SERVER}, ?MODULE, [Configuration], []).
+    gen_statem:start_link(?MODULE, [Configuration], []).
 
 callback_mode() ->
     [state_functions].
