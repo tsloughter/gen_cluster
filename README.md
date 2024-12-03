@@ -67,4 +67,4 @@ gen_cluster:start_link([{discovery, {gc_discover_dns_a, #{domain =>
                                                            "k8s-erlang-cluster.k8s-erlang-cluster"}}}])
 ```
 
-Or in your in your supervision tree.
+Or in your supervision tree.
