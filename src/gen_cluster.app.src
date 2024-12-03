@@ -1,6 +1,6 @@
 {application, gen_cluster, [
     {description, "Discover, connect and reconnect Erlang nodes"},
-    {vsn, "0.1.0"},
+    {vsn, "0.2.0"},
     {registered, []},
     {mod, {gen_cluster_app, []}},
     {applications, [
@@ -13,5 +13,5 @@
     {env, []},
     {modules, []},
     {licenses, ["Apache-2.0"]},
-    {links, []}
+    {links, [{"Github", "https://github.com/tsloughter/gen_cluster"}]}
  ]}.

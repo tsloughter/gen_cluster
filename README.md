@@ -19,15 +19,16 @@ If configuration is given in `sys.config` for `gen_cluster` it will start on
 boot. To start in your supervision tree simply leave `gen_cluster` out of
 configuration or set the configuration to the empty list, `[]`.
 
-The simplest way to try `gen_cluster` is with `gc_discover_epmd_hosts` which
+The simplest way to try `gen_cluster` is with `gc_discover_epmd_all` which
 will connect to all other hosts that connect to the same `epmd`. The empty
 configuration is the same as `#{hosts => [localhost]}`:
 
 ```erlang
-{gen_cluster, [{discovery, {gc_discover_epmd_hosts, #{}}}]}
+{gen_cluster, [{discovery, {gc_discover_epmd_all, #{}}}]}
 ```
 
-or `gc_discover_static` which takes a list of nodes to connect to, for example:
+or `gc_discover_static` which takes a list of nodes to connect to, for example
+on my system `rosa` with 2 nodes `a` and `b` already running:
 
 ```erlang
 {gen_cluster, [{discovery, {gc_discover_static, ['a@rosa', 'b@rosa']}}]}

@@ -1,4 +1,4 @@
--module(gc_discover_epmd_hosts).
+-module(gc_discover_epmd_all).
 
 -behaviour(gc_discover).
 
