@@ -35,7 +35,7 @@ peers(#state{hosts=Hosts}) ->
                             {ok, Names} ->
                                 lists:foldl(fun({NodeName, NodePort}, PeersAcc1) ->
                                                     %% elp:ignore W0023
-                                                    Node = list_to_atom(string:join([NodeName, Host], "@")),
+                                                    Node = list_to_atom(string:join([NodeName, to_string(Host)], "@")),
                                                     sets:add_element(#{node => Node,
                                                                        port => NodePort}, PeersAcc1)
                                             end, PeersAcc, Names);
@@ -46,3 +46,16 @@ peers(#state{hosts=Hosts}) ->
                 end, Peers, Hosts).
 
 %%
+
+-spec to_string(atom() | string() | inet:ip_address()) -> string().
+to_string(A) when is_atom(A) ->
+    atom_to_list(A);
+to_string(IP) when is_tuple(IP) ->
+    case inet:ntoa(IP) of
+        {error, einval} ->
+            "";
+        S ->
+            S
+    end;
+to_string(A) when is_list(A) ->
+    A.
