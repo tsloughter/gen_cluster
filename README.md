@@ -40,7 +40,7 @@ An example of using DNS to connect nodes is found in `examples/`, the
 `gen_cluster` configuration is in the example `k8s_erlang_cluster` is:
 
 ```erlang
-{gen_cluster, [{discovery, {gc_discover_dns_a, #{domain => "k8s-erlang-cluster.k8s-erlang-cluster"}}}]},
+{gen_cluster, [{discovery, {gc_discover_dns_ip, #{domain => "k8s-erlang-cluster.k8s-erlang-cluster"}}}]},
 ```
 
 Configure `refresh_interval_ms` (default `5000`) to have `gen_cluster` look for
@@ -64,8 +64,15 @@ If no configuration is given to `gen_cluster` on boot it will not start a
 `gen_cluster` process. You can start `gen_cluster` with `start_link`:
 
 ```erlang
-gen_cluster:start_link([{discovery, {gc_discover_dns_a, #{domain =>
-                                                           "k8s-erlang-cluster.k8s-erlang-cluster"}}}])
+gen_cluster:start_link([{discovery, {gc_discover_dns_ip, #{domain =>
+                                                            "k8s-erlang-cluster.k8s-erlang-cluster"}}}])
 ```
 
-Or in your supervision tree.
+Or as a child in your supervision tree:
+
+```erlang
+GenClusterConfig = [{discovery, {gc_discover_dns_ip, #{domain =>
+                                              "k8s-erlang-cluster.k8s-erlang-cluster"}}}],
+[#{id => gen_cluster,
+  start => {gen_cluster, start_link, [GenClusterConfig]}}]
+```

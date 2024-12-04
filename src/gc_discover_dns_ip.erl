@@ -1,4 +1,4 @@
--module(gc_discover_dns_a).
+-module(gc_discover_dns_ip).
 
 -behaviour(gc_discover).
 
@@ -11,6 +11,7 @@
 -record(state, {node_name      :: string(),
                 domain         :: dns_name(),
                 host_type      :: host_type(),
+                ip_record_type :: gc_discover_dns:ip_record_type(),
                 lookup_timeout :: erlang:timeout()}).
 
 -include_lib("kernel/include/inet.hrl").
@@ -21,19 +22,23 @@
 init(Opts=#{domain := Domain}) ->
     Timeout = maps:get(lookup_timeout, Opts, 5000),
     HostType = maps:get(host_type, Opts, ip),
+    UseIPV6 = maps:get(ipv6, Opts, false),
+    IPRecordType = gc_discover_dns:ip_record_type(UseIPV6),
     [NodeName, _] = string:split(atom_to_list(node()), "@"),
     {ok, #state{node_name=NodeName,
                 domain=Domain,
                 host_type=HostType,
+                ip_record_type=IPRecordType,
                 lookup_timeout=Timeout}}.
 
 -spec peers(#state{}) -> gen_cluster:peers().
 peers(#state{node_name=NodeName,
              domain=Domain,
              host_type=HostType,
+             ip_record_type=IPRecordType,
              lookup_timeout=Timeout}) ->
     Set = sets:new([{version, 2}]),
-    case inet_res:getbyname(Domain, a, Timeout) of
+    case inet_res:getbyname(Domain, IPRecordType, Timeout) of
         {ok, #hostent{h_addr_list=IPs}} ->
             lists:foldl(fun(IP, PeersAcc) ->
                                 handle_ip(IP, NodeName, HostType, PeersAcc)
