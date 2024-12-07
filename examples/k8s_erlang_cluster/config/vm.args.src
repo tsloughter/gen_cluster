@@ -1,4 +1,5 @@
--name k8s_erlang_cluster@${NODE_IP}
+-name k8s_erlang_cluster@${POD_IP}
 
 -setcookie k8s_erlang_cluster
 
++sbwt none

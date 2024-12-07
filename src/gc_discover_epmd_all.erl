@@ -1,15 +1,42 @@
 -module(gc_discover_epmd_all).
+-moduledoc "
+Implementation of `gc_discover` that connects to all nodes found on the same epmd
+as the one this node is connected to that also has the configured `host`.  The
+`host` defaults to the hostname of the current node's node name if no `hosts` key is
+given in the options for this module.
+
+### Configuration examples
+
+Using the application environment (these config list could also be passed in as
+an argument to `gen_cluster:start_link()`)
+
+    {gen_cluster, [{discover, {epmd_all, #{}}}]}
+
+    {gen_cluster, [{discover, {epmd_all, #{hosts => [rosa]}}}]}
+".
 
 -behaviour(gc_discover).
 
 -export([init/1,
          peers/1]).
 
+-doc "Name of the host to look for nodes on through epmd".
 -type host() :: atom() | string() | inet:ip_address().
+
+-doc "
+Options map to pass configuration for this discover module. Takes an
+option ``hosts`` key with a list of hosts to check for nodes on from the
+epmd. If `hosts` is not set in the configuration then the only host
+checked for through `epmd` is the host of the current node's node name.
+
+".
+-type options() :: #{hosts => [host()]}.
+
+-export_type([options/0]).
 
 -record(state, {hosts :: [host()]}).
 
--spec init(#{hosts => [host()]}) -> {ok, #state{}}.
+-spec init(options()) -> {ok, #state{}}.
 init(Opts) ->
     %% TODO: error if this fails
     [_, NodeHost] = string:split(atom_to_list(node()), "@"),

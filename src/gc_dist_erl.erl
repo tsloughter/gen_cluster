@@ -1,4 +1,9 @@
 -module(gc_dist_erl).
+-moduledoc "
+The default implementation of `gc_dist` that uses Erlang distribution for
+returning the current peers (nodes), connecting to a peer (node) or
+disconnecting from a peer (node).
+".
 
 -behaviour(gc_dist).
 

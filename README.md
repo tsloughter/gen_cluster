@@ -13,26 +13,54 @@ project somewhere.
 
 The API may (will) change! This is a first pass at a generalization.
 
-## Configuration
+# Requirements
+
+* Erlang/OTP 27+
+
+# Usage
+
+By default no clustering is done when `gen_cluster` is started. If `gen_cluster`
+is started on boot of an OTP release or with
+`application:ensure_all_started(gen_cluster)` and the application environment is
+`[]` or not set at all then no `gen_cluster` process is started, only the
+`supervisor` process is started with an empty child list. Then you can instead
+start `gen_cluster` in your own supervision tree with `gen_cluster:start_link`.
+
+If there is configuration in the application environment then a `gen_cluster`
+process is started by the top level supervisor and it attempts to connect to all
+nodes returned by the configured discovery module (the default is `{static, []}`
+which returns no nodes) and it looks for new or disconnected nodes on an
+interval (defaults to `5000` milliseconds).
+
+Even if started on boot additional clusters can be joined with
+`gen_cluster:start_link` (as in, with a separate distribution module than Erlang
+distribution you could connect to an additional cluster).
+
+# Configuration
+
+## Application Environment
+
+### EPMD and Static
 
 If configuration is given in `sys.config` for `gen_cluster` it will start on
-boot. To start in your supervision tree simply leave `gen_cluster` out of
-configuration or set the configuration to the empty list, `[]`.
+boot. 
 
 The simplest way to try `gen_cluster` is with `gc_discover_epmd_all` which
 will connect to all other hosts that connect to the same `epmd`. The empty
 configuration is the same as `#{hosts => [localhost]}`:
 
 ```erlang
-{gen_cluster, [{discovery, {gc_discover_epmd_all, #{}}}]}
+{gen_cluster, [{discovery, {epmd_all, #{}}}]}
 ```
 
 or `gc_discover_static` which takes a list of nodes to connect to, for example
 on my system `rosa` with 2 nodes `a` and `b` already running:
 
 ```erlang
-{gen_cluster, [{discovery, {gc_discover_static, ['a@rosa', 'b@rosa']}}]}
+{gen_cluster, [{discovery, {static, ['a@rosa', 'b@rosa']}}]}
 ```
+
+### DNS
 
 To disable reconnection set `refresh_interval_ms` to `infinity`.
 
@@ -40,7 +68,7 @@ An example of using DNS to connect nodes is found in `examples/`, the
 `gen_cluster` configuration is in the example `k8s_erlang_cluster` is:
 
 ```erlang
-{gen_cluster, [{discovery, {gc_discover_dns_ip, #{domain => "k8s-erlang-cluster.k8s-erlang-cluster"}}}]},
+{gen_cluster, [{discovery, {dns, #{domain => "k8s-erlang-cluster.k8s-erlang-cluster"}}}]},
 ```
 
 Configure `refresh_interval_ms` (default `5000`) to have `gen_cluster` look for
@@ -58,21 +86,28 @@ handoff.
 Other future configuration changes are the reconnect interval being separate
 from refresh with a backoff tracked per-node it is attempting to reconnected.
 
-### Starting Manually
+#### IPv6
+
+Set `ipv6` to true in the configuration map to tell `gen_cluster` to use IPv6
+for either the initial DNS query -- used when the `gc_discover_dns_ip` module is
+used -- or for turning returned domains into IP's -- used when a `SRV` query is
+used with `host_type` set to `ip` to turn the returned domains into IPs.
+
+## Starting Manually
 
 If no configuration is given to `gen_cluster` on boot it will not start a
 `gen_cluster` process. You can start `gen_cluster` with `start_link`:
 
 ```erlang
-gen_cluster:start_link([{discovery, {gc_discover_dns_ip, #{domain =>
-                                                            "k8s-erlang-cluster.k8s-erlang-cluster"}}}])
+gen_cluster:start_link([{discovery, {dns, #{domain =>
+                                           "k8s-erlang-cluster.k8s-erlang-cluster"}}}])
 ```
 
 Or as a child in your supervision tree:
 
 ```erlang
-GenClusterConfig = [{discovery, {gc_discover_dns_ip, #{domain =>
-                                              "k8s-erlang-cluster.k8s-erlang-cluster"}}}],
+GenClusterConfig = [{discovery, {ip, #{domain =>
+                                       "k8s-erlang-cluster.k8s-erlang-cluster"}}}],
 [#{id => gen_cluster,
   start => {gen_cluster, start_link, [GenClusterConfig]}}]
 ```

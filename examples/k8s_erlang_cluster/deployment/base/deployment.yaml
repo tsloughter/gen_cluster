@@ -15,7 +15,7 @@ spec:
         env:
         - name: ERL_DIST_PORT
           value: "39135"
-        - name: NODE_IP
+        - name: POD_IP
           valueFrom:
             fieldRef:
                 fieldPath: status.podIP

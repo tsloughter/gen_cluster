@@ -1,8 +1,8 @@
-%%%-------------------------------------------------------------------
-%% @doc state machine to manage state of the cluster.
-%% @end
-%%%-------------------------------------------------------------------
 -module(gen_cluster).
+-moduledoc "
+Process that manages calling the necessary discovery and connect/disconnect
+functions at a configurable interval.
+".
 
 -behaviour(gen_statem).
 
@@ -17,13 +17,13 @@
 
 -export([nodes_to_peers/1]).
 
-%% uses default port if none given
-%% -type node_address() :: {inet:ip_address(), inet:port_number()} |
-%%                         {string(), inet:port_number()} |
-%%                         inet:ip_address() |
-%%                         string().
+-type builtin_discovery() :: {dns, gc_discover_dns_ip:options() | gc_discover_dns_srv:options()} |
+                             {static, gc_discover_static:options()} |
+                             {epmd_all, gc_discover_epmd_all:options()}.
 
--type option() :: {discover, module()} |
+-type option() :: {discovery,
+                   builtin_discovery() |
+                   {module(), term()}} |
                   {dist, module()} |
                   {refresh_interval_ms, integer() | undefined}.
 
@@ -48,12 +48,14 @@
 
 -define(DEFAULT_REFRESH_INTERVAL_MS, 5000).
 
+-spec start_link(config()) -> {ok, pid()} | ignore | {error, term()}.
 start_link(Configuration) ->
     gen_statem:start_link(?MODULE, [Configuration], []).
 
 callback_mode() ->
     [state_functions].
 
+-spec init([config()]) -> gen_statem:init_result(inactive | active, #data{}).
 init([Configuration]) ->
     Data = data_from_config(Configuration),
     {ok, inactive, Data, [{next_event, internal, refresh}]}.
@@ -78,11 +80,11 @@ code_change(_, _OldState, Data, _) ->
 
 %% Internal functions
 
--spec data_from_config([{atom(), dynamic()}]) -> #data{}.
+-spec data_from_config(config()) -> #data{}.
 data_from_config(Configuration) ->
     Discovery = init_callback(proplists:get_value(discovery,
                                                   Configuration,
-                                                  {gc_discover_static, []})),
+                                                  {static, []})),
     Dist = init_callback(proplists:get_value(dist,
                                              Configuration,
                                              {gc_dist_erl, []})),
@@ -94,7 +96,19 @@ data_from_config(Configuration) ->
           dist=Dist,
           refresh_interval_ms=RefreshIntervalMs}.
 
+init_callback({dns, Config}) ->
+    Module = to_dns_module(maps:get(record_type, Config, ip)),
+    init_callback_({Module, Config});
+init_callback({static, Config}) ->
+    init_callback_({gc_discover_static, Config});
+init_callback({epmd_all, Config}) ->
+    init_callback_({gc_discover_epmd_all, Config});
 init_callback({Module, Config}) ->
+    %% use a separate function here so the `dns' case can't accidentally cause an
+    %% infinite loop if `record_type' were set to `dns'
+    init_callback_({Module, Config}).
+
+init_callback_({Module, Config}) ->
     {ok, State} = run_callback({Module, Config}, init, []),
     {Module, State}.
 
@@ -125,3 +139,8 @@ nodes_to_peers(Nodes) ->
 -spec run_callback({module(), cb_state()}, atom(), list()) -> dynamic().
 run_callback({CallbackMod, State}, Fun, Args) ->
     erlang:apply(CallbackMod, Fun, Args ++ [State]).
+
+to_dns_module(ip) ->
+    gc_discover_dns_a;
+to_dns_module(srv) ->
+    gc_discover_dns_srv.
