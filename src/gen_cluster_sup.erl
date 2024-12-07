@@ -1,9 +1,9 @@
-%%%-------------------------------------------------------------------
-%% @doc gen_cluster top level supervisor.
-%% @end
-%%%-------------------------------------------------------------------
-
 -module(gen_cluster_sup).
+-moduledoc "
+Top level supervisor of `gen_cluster` which starts a `gen_cluster`
+process if there is a non-empty `gen_cluster` application
+configuration.
+".
 
 -behaviour(supervisor).
 
@@ -28,8 +28,8 @@ start_link() ->
 init([]) ->
     SupFlags = #{
         strategy => one_for_all,
-        intensity => 0,
-        period => 1
+        intensity => 1,
+        period => 5
     },
 
     ChildSpecs = case application:get_all_env(gen_cluster) of
@@ -42,4 +42,4 @@ init([]) ->
 
     {ok, {SupFlags, ChildSpecs}}.
 
-%% internal functions
+%%
