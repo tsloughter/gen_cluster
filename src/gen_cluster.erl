@@ -141,6 +141,6 @@ run_callback({CallbackMod, State}, Fun, Args) ->
     erlang:apply(CallbackMod, Fun, Args ++ [State]).
 
 to_dns_module(ip) ->
-    gc_discover_dns_a;
+    gc_discover_dns_ip;
 to_dns_module(srv) ->
     gc_discover_dns_srv.
