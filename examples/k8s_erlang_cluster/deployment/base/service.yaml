@@ -7,5 +7,5 @@ spec:
   ports:
   - protocol: TCP
     port: 39135
-    targetPort: 39135
+    targetPort: dist-erl
     name: dist-erl

@@ -103,8 +103,8 @@ jobs:
         cd examples/k8s_erlang_cluster
         ctlptl apply -f cluster.yaml
 
-        docker build -t localhost:5005/k8s_erlang_cluster:latest .
-        docker push localhost:5005/k8s_erlang_cluster:latest
+        docker build -t localhost:5005/k8s_erlang_cluster:0.1.0
+        docker push localhost:5005/k8s_erlang_cluster:0.1.0
 
         kubectl apply -k deployment/base
 
