@@ -180,7 +180,7 @@ requests to the Pods through. The headless service results in an Endpoint
 per-Pod, see below in the steps to setup the cluster in
 [kind](https://kind.sigs.k8s.io/) for an example.
 
-## Run Example
+## Run Kubernetes Example
 
 The example can be installed to any Kubernetes cluster but comes with a
 configuration (`examples/k8s_erlang_cluster/cluster.yaml`) for creating the
