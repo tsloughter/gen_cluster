@@ -5,5 +5,5 @@
   1},
  {<<"gen_cluster">>,
   {git,"https://github.com/tsloughter/gen_cluster",
-       {ref,"3501a686c035cd7fab3e41a4fc09f2eeb6efa0f6"}},
+       {ref,"b9a3de0904f70fc6ed7eaeaf331b83a89f871299"}},
   0}].
