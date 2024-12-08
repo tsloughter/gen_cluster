@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
+    name: Build and type check on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -75,11 +75,23 @@ jobs:
     - name: eqWAlizer
       run: ./elp eqwalize-all
 
+  test:
+    name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        otp_version: ['27']
+        rebar3_version: ['3.24']
+        os: [ubuntu-latest]
+    env:
+      OTP_VERSION: ${{ matrix.otp_version }}
+    steps:
+    - uses: actions/checkout@v4
+
     - name: Install Kind
       uses: helm/kind-action@v1.10.0
       with:
         install_only: true
-
 
     - name: Install Kustomize
       run: |
@@ -103,7 +115,7 @@ jobs:
         cd examples/k8s_erlang_cluster
         ctlptl apply -f cluster.yaml
 
-        docker build -t localhost:5005/k8s_erlang_cluster:0.1.0
+        docker build -t localhost:5005/k8s_erlang_cluster:0.1.0 .
         docker push localhost:5005/k8s_erlang_cluster:0.1.0
 
         kubectl apply -k deployment/base
