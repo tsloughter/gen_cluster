@@ -231,7 +231,7 @@ $ kubectl exec -n k8s-erlang-cluster deploy/k8s-erlang-cluster -- bin/k8s_erlang
 # Implementing Third Party Discovery or Connection
 
 There is a behaviour for both discovery (`gc_discover`) and peer connection
-(`gc_dist) respectively. Discover must have an `init/1` for initializing and
+(`gc_dist`) respectively. Discover must have an `init/1` for initializing and
 returning any needed state for later returning a list of peers to be connected
 to:
 
