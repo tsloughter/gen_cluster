@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
+    name: Build and type check on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -74,3 +74,60 @@ jobs:
     # useless unless manually checked in logs
     - name: eqWAlizer
       run: ./elp eqwalize-all
+
+  test:
+    name: Test on OTP ${{ matrix.otp_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        otp_version: ['27']
+        rebar3_version: ['3.24']
+        os: [ubuntu-latest]
+    env:
+      OTP_VERSION: ${{ matrix.otp_version }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Kind
+      uses: helm/kind-action@v1.10.0
+      with:
+        install_only: true
+
+    - name: Install Kustomize
+      run: |
+        wget "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+        rm -f /usr/local/bin/kustomize
+        bash install_kustomize.sh /usr/local/bin
+
+    - name: Install ctlptl
+      run: |
+        CTLPTL_VERSION="0.8.36"
+        CTLPTL_FILE_NAME="ctlptl.$CTLPTL_VERSION.linux.x86_64.tar.gz"
+        curl -fsSL https://github.com/tilt-dev/ctlptl/releases/download/v$CTLPTL_VERSION/$CTLPTL_FILE_NAME | \
+          tar -xzv -C /usr/local/bin ctlptl
+
+
+    - name: Test in K8s
+      shell: bash
+      run: |
+        set -eux
+
+        cd examples/k8s_erlang_cluster
+        ctlptl apply -f cluster.yaml
+
+        docker build -t localhost:5005/k8s_erlang_cluster:0.1.0 .
+        docker push localhost:5005/k8s_erlang_cluster:0.1.0
+
+        kubectl apply -k deployment/base
+
+        sleep 3
+
+        kubectl wait \
+                --for=condition=Available --timeout=300s -n k8s-erlang-cluster deployment/k8s-erlang-cluster
+
+        LENGTH=`kubectl exec -n k8s-erlang-cluster deployment/k8s-erlang-cluster -- bin/k8s_erlang_cluster eval 'length(nodes()).'`
+
+        # fail if all 3 nodes aren't connected together, meaning
+        # the call to nodes() would have returned a list of a
+        # different size than 2
+        if [ ${LENGTH} != 2 ] ; then exit 1 ; fi

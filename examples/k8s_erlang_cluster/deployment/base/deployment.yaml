@@ -8,10 +8,11 @@ spec:
     spec:
       containers:
       - name: k8s-erlang-cluster
-        image: localhost:5005/k8s_erlang_cluster:latest
+        image: localhost:5005/k8s_erlang_cluster:0.1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 39135
+        - name: dist-erl
+          containerPort: 39135
         env:
         - name: ERL_DIST_PORT
           value: "39135"
