@@ -19,7 +19,7 @@ The API may (will) change! This is a first pass at a generalization.
 
 # Requirements
 
-* Erlang/OTP 27+
+* Erlang/OTP 27+ (I wanted to try the new docs)
 
 # Usage
 
