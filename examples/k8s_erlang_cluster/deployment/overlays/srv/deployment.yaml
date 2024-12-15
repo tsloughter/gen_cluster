@@ -1,0 +1,8 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-erlang-cluster
+spec:
+  template:
+    spec:
+      subdomain: "k8s-erlang-cluster"

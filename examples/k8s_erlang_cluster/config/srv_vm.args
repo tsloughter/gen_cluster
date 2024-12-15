@@ -1,4 +1,4 @@
--name k8s_erlang_cluster@${NODE_HOST}
+-name k8s_erlang_cluster
 
 -setcookie k8s_erlang_cluster
 

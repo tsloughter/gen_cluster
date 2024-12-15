@@ -118,115 +118,8 @@ GenClusterConfig = [{discovery, {ip, #{domain =>
 
 # Using in Kubernetes
 
-## Setup
-
-Under `examples/k8s_erlang_cluster` there is an example project that builds an
-Erlang release with [kustomize](https://kustomize.io/) configuration to deploy a
-cluster to Kubernetes. The example's `config/sys.config` contains configuration
-for `gen_cluster` which is started on boot of the release:
-
-```erlang
-{discovery, {dns, #{domain => "k8s-erlang-cluster.k8s-erlang-cluster"}}}
-```
-
-This tells `gen_cluster` to use the DNS module for finding peers which defaults
-to looking up `A` records and using the IPs as the host part of each node name.
-The `domain` is set to `<service>.<namespace>` which resolves to records for
-the service `k8s-erlang-cluster` in a namespace `k8s-erlang-cluster`.
-
-To set the node name properly there are 3 pieces of configuration. First,
-`config/vm.args.src` sets `-name` to use an environment variable `POD_IP`:
-
-```shell
--name k8s_erlang_cluster@${POD_IP}
-```
-
-Next, the environment of the container that runs the release is made to set the
-environment variable `POD_IP` to the IP address of that Pod in
-`deployment/base/deployment.yaml`:
-
-```yaml
-env:
-- name: ERL_DIST_PORT
-  value: "39135"
-- name: POD_IP
-  valueFrom:
-    fieldRef:
-        fieldPath: status.podIP
-```
-
-Note that `ERL_DIST_PORT` is also set. This tells the VM what port to listen for
-distribution connections on, as well as what port to connect to other nodes on.
-Setting the variable will disable EPMD as it is not needed if we know the port
-to use and the port used by all other nodes in the cluster.
-
-Lastly, a [headless
-service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services)
-is used to expose the IPs of these Pods through DNS. A headless service is
-created when `clusterIP` is set to `None` in the `Service` resource, found in
-`deployment/base/service.yaml`:
-
-```yaml
-clusterIP: None
-ports:
-- protocol: TCP
-  port: 39135
-  targetPort: 39135
-  name: dist-erl
-```
-
-A Service without `clusterIP: None` would have a single IP to load balance
-requests to the Pods through. The headless service results in an Endpoint
-per-Pod, see below in the steps to setup the cluster in
-[kind](https://kind.sigs.k8s.io/) for an example.
-
-## Run Kubernetes Example
-
-The example can be installed to any Kubernetes cluster but comes with a
-configuration (`examples/k8s_erlang_cluster/cluster.yaml`) for creating the
-cluster with [kind](https://kind.sigs.k8s.io/) via the tool
-[ctlptl](https://github.com/tilt-dev/ctlptl):
-
-```shell
-$ ctlptl apply -f cluster.yaml
-```
-
-The `cluster.yaml` configuration creates a kind cluster with a Docker registry
-on localhost port 5005. This allows for the publishing of a Docker image for the
-example release locally in a place the kind cluster can pull from:
-
-```shell
-$ docker build -t localhost:5005/k8s_erlang_cluster:0.1.0
-$ docker push localhost:5005/k8s_erlang_cluster:0.1.0
-```
-
-The [kustomize](https://kustomize.io/) configuration can be used to install the
-release with `kubectl apply -k`:
-
-```shell
-$ kubectl apply -k deployment/base
-namespace/k8s-erlang-cluster created
-configmap/k8s-erlang-cluster created
-service/k8s-erlang-cluster created
-deployment.apps/k8s-erlang-cluster created
-```
-
-With `get endpoints` we can view the results of the creation of a headless
-Service that matches 3 Pods:
-
-```shell
-$ kubectl -n k8s-erlang-cluster get endpoints k8s-erlang-cluster
-NAME                 ENDPOINTS                                            AGE
-k8s-erlang-cluster   10.244.0.5:39135,10.244.0.6:39135,10.244.0.7:39135   7m11s
-```
-
-To see that the cluster is formed run a command against a single Pod in the
-Deployment with `exec`:
-
-```shell
-$ kubectl exec -n k8s-erlang-cluster deploy/k8s-erlang-cluster -- bin/k8s_erlang_cluster eval 'nodes().'
-['k8s_erlang_cluster@10.244.0.5', 'k8s_erlang_cluster@10.244.0.7']
-```
+See documentation in the examples or on Hex Docs see the sidebar for the
+Kubernetes section.
 
 # Implementing Third Party Discovery or Connection
 
@@ -251,6 +144,12 @@ disconnecting from peers:
 -callback connect(gen_cluster:peer(), cb_state()) -> boolean() | ignored.
 -callback disconnect(gen_cluster:peer(), cb_state()) -> boolean() | ignored.
 ```
+
+# Testing
+
+Right now tests are all done on the DNS method of discovery and based on the
+examples. The setup and configuration is only done in GitHub Actions so the
+quickest way to run them locally would be with [`act`](https://nektosact.com/).
 
 # Acknowledgments
 

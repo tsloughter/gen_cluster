@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8s-erlang-cluster
-data:
-  test: "value"
