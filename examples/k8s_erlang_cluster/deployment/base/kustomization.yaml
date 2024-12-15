@@ -5,7 +5,6 @@ namespace: k8s-erlang-cluster
 resources:
 - deployment.yaml
 - service.yaml
-- configMap.yaml
 - namespace.yaml
 
 labels:

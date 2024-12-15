@@ -67,11 +67,11 @@ jobs:
 
     - name: Download elp
       run: |
-        wget https://github.com/WhatsApp/erlang-language-platform/releases/download/2024-11-07/elp-linux-x86_64-unknown-linux-gnu-otp-26.2.tar.gz
-        tar xvf elp-linux-x86_64-unknown-linux-gnu-otp-26.2.tar.gz
+        wget https://github.com/WhatsApp/erlang-language-platform/releases/download/2024-12-09/elp-linux-x86_64-unknown-linux-gnu-otp-27.1.tar.gz
+        tar xvf elp-linux-x86_64-unknown-linux-gnu-otp-27.1.tar.gz
 
-    # NOTE: As of release 2024-11-07 this *always* returns 0 so is sort of
-    # useless unless manually checked in logs
+    # Add --bail-on-error when bug is fixed that causes it to return status code 101
+    # even when no errors occured
     - name: eqWAlizer
       run: ./elp eqwalize-all
 
@@ -107,16 +107,16 @@ jobs:
           tar -xzv -C /usr/local/bin ctlptl
 
 
-    - name: Test in K8s
+    - name: Test IP method in K8s
       shell: bash
       run: |
         set -eux
 
-        cd examples/k8s_erlang_cluster
+        pushd examples/k8s_erlang_cluster
         ctlptl apply -f cluster.yaml
 
-        docker build -t localhost:5005/k8s_erlang_cluster:0.1.0 .
-        docker push localhost:5005/k8s_erlang_cluster:0.1.0
+        docker build -f Dockerfile.ip -t localhost:5005/k8s_erlang_cluster:ip-0.1.0 .
+        docker push localhost:5005/k8s_erlang_cluster:ip-0.1.0
 
         kubectl apply -k deployment/base
 
@@ -124,6 +124,41 @@ jobs:
 
         kubectl wait \
                 --for=condition=Available --timeout=300s -n k8s-erlang-cluster deployment/k8s-erlang-cluster
+
+        sleep 5
+
+        LENGTH=`kubectl exec -n k8s-erlang-cluster deployment/k8s-erlang-cluster -- bin/k8s_erlang_cluster eval 'length(nodes()).'`
+
+        # fail if all 3 nodes aren't connected together, meaning
+        # the call to nodes() would have returned a list of a
+        # different size than 2
+        if [ ${LENGTH} != 2 ] ; then exit 1 ; fi
+
+        popd
+
+    - name: Test SRV method in K8s
+      shell: bash
+      run: |
+        set -eux
+
+        cd examples/k8s_erlang_cluster
+
+        ctlptl delete -f cluster.yaml
+        ctlptl apply -f cluster.yaml
+
+        docker build -f Dockerfile.srv -t localhost:5005/k8s_erlang_cluster:srv-0.1.0 .
+        docker push localhost:5005/k8s_erlang_cluster:srv-0.1.0
+
+        kubectl apply -k deployment/overlays/srv
+
+        kubectl rollout restart -n kube-system deployment coredns
+
+        sleep 3
+
+        kubectl wait \
+                --for=condition=Available --timeout=300s -n k8s-erlang-cluster deployment/k8s-erlang-cluster
+
+        sleep 5
 
         LENGTH=`kubectl exec -n k8s-erlang-cluster deployment/k8s-erlang-cluster -- bin/k8s_erlang_cluster eval 'length(nodes()).'`
 

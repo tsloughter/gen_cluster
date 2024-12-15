@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: k8s-erlang-cluster
-        image: localhost:5005/k8s_erlang_cluster:0.1.0
+        image: localhost:5005/k8s_erlang_cluster:ip-0.1.0
         imagePullPolicy: Always
         ports:
         - name: dist-erl
@@ -16,7 +16,7 @@ spec:
         env:
         - name: ERL_DIST_PORT
           value: "39135"
-        - name: POD_IP
+        - name: NODE_HOST
           valueFrom:
             fieldRef:
                 fieldPath: status.podIP

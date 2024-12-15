@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+# still have to manually restart DNS with:
+# kubectl rollout restart -n kube-system deployment coredns
+- coredns-configmap.yaml
+
+images:
+- name: localhost:5005/k8s_erlang_cluster
+  newTag: srv-0.1.0
+
+patches:
+- path: deployment.yaml
+
+# don't replace namespace in coredns configmap
+transformers:
+  - |-
+    apiVersion: builtin
+    kind: NamespaceTransformer
+    metadata:
+      name: notImportantHere
+      namespace: k8s-erlang-cluster
+    unsetOnly: true
