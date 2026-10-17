@@ -5,8 +5,8 @@ uses all the returned hosts as peers to connect or reconnect to. Whether
 to use the hostname or IP for each hostname result is configured with
 the option `host_type` which takes `hostname` or `ip` as values. The default
 is `hostname` which keeps the result as is in the node name. When it
-is `ip` each returned hostname is passed to `inet_res:getbyname/3`
-to get an IP.
+is `ip` each returned hostname is passed to `inet_res:getbyname/3`.
+Every returned IP becomes a peer with the port from its SRV record.
 
 Since this is a built-in discovery module it has an alias, `dns`, which
 can be used in place of the full module name, `gc_discovery_dns_srv`. The
@@ -99,29 +99,28 @@ peers(#state{node_name=NodeName,
                  -> gen_cluster:peers().
 handle_host(Host, Port, IPRecordType, NodeName, HostType, Peers) ->
     case parse_host(Host, IPRecordType, HostType) of
-        {ok, ResolvedHost} ->
-            %% elp:ignore W0023
-            Node = list_to_atom(string:join([NodeName, ResolvedHost], "@")),
-            sets:add_element(#{node => Node,
-                               port => Port}, Peers);
+        {ok, ResolvedHosts} ->
+            lists:foldl(fun(ResolvedHost, Acc) ->
+                                %% elp:ignore W0023
+                                Node = list_to_atom(string:join([NodeName, ResolvedHost], "@")),
+                                sets:add_element(#{node => Node, port => Port}, Acc)
+                        end, Peers, ResolvedHosts);
         {error, _} ->
             %% TODO: log a debug/info/warning
             Peers
     end.
 
 -spec parse_host(gc_discover_dns:dns_name(), gc_discover_dns:ip_record_type(), gc_discover_dns:host_type())
-                -> {ok, string()} | {error, term()}.
+                -> {ok, [string()]} | {error, term()}.
 parse_host(Host, IPRecordType, ip) ->
     case inet_res:getbyname(Host, IPRecordType, 5000) of
-        {error, einval} ->
-            {error, einval};
-        {ok, {hostent, _, _, _, _, [IP={_, _, _, _}]}} ->
-            parse_ip(IP);
-        {ok, {hostent, _, _, _, _, [IP={_, _, _, _, _, _, _, _}]}} ->
-            parse_ip(IP)
+        {error, _}=Error ->
+            Error;
+        {ok, {hostent, _, _, _, _, IPs}} ->
+            {ok, [Address || IP <- IPs, {ok, Address} <- [parse_ip(IP)]]}
     end;
 parse_host(Host, _, hostname) ->
-    {ok, Host}.
+    {ok, [Host]}.
 
 parse_ip(IP) ->
     case inet:ntoa(IP) of

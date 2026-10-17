@@ -5,7 +5,7 @@
 %% Exercise the real resolver against a loopback DNS server. Tests using this
 %% helper must run sequentially because resolver configuration is VM-wide.
 with_records(Records, Fun) ->
-    Keys = [resolv_conf, nameservers, alt_nameservers, search, domain],
+    Keys = [resolv_conf, nameservers, alt_nameservers, search, domain, retry],
     Saved = [{Key, inet_db:res_option(Key)} || Key <- Keys],
     {ok, Socket} = gen_udp:open(0, [binary, {ip, {127, 0, 0, 1}}, {active, true}]),
     {ok, Port} = inet:port(Socket),
@@ -17,6 +17,7 @@ with_records(Records, Fun) ->
         ok = inet_db:res_option(alt_nameservers, []),
         ok = inet_db:res_option(search, []),
         ok = inet_db:res_option(domain, ""),
+        ok = inet_db:res_option(retry, 1),
         ok = inet_db:clear_cache(),
         Fun()
     after
