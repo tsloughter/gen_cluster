@@ -28,6 +28,7 @@ Options map to pass configuration for this discover module. Takes an
 option ``hosts`` key with a list of hosts to check for nodes on from the
 epmd. If `hosts` is not set in the configuration then the only host
 checked for through `epmd` is the host of the current node's node name.
+An empty `hosts` list disables discovery and returns no peers.
 
 ".
 -type options() :: #{hosts => [host()]}.
@@ -43,7 +44,7 @@ init(Opts) ->
     Hosts = case maps:find(hosts, Opts) of
                 error ->
                     [NodeHost];
-                {ok, Hs=[_|_]} ->
+                {ok, Hs} when is_list(Hs) ->
                     %% replaces `localhost' with the hostname of the node
                     lists:map(fun(localhost) ->
                                       NodeHost;
