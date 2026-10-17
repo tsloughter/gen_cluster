@@ -147,9 +147,12 @@ disconnecting from peers:
 
 # Testing
 
-Right now tests are all done on the DNS method of discovery and based on the
-examples. The setup and configuration is only done in GitHub Actions so the
-quickest way to run them locally would be with [`act`](https://nektosact.com/).
+Run `rebar3 eunit` for the local regression tests. DNS tests use a loopback DNS
+server and do not require external DNS or Kubernetes.
+
+The Kubernetes integration checks build the examples against the current library
+source. Their setup is in GitHub Actions; they can also be run locally with
+[`act`](https://nektosact.com/).
 
 # Acknowledgments
 

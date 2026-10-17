@@ -84,12 +84,16 @@ cluster with [kind](https://kind.sigs.k8s.io/) via the tool
 $ ctlptl apply -f cluster.yaml
 ```
 
+Run the commands in this section from `examples/k8s_erlang_cluster`. The Docker
+build context is the repository root (`../..`) so the image includes the current
+`gen_cluster` source as a rebar3 checkout dependency.
+
 The `cluster.yaml` configuration creates a kind cluster with a Docker registry
 on localhost port 5005. This allows for the publishing of a Docker image for the
 example release locally in a place the kind cluster can pull from:
 
 ```shell
-$ docker build -f Dockerfile.ip -t localhost:5005/k8s_erlang_cluster:ip-0.1.0
+$ docker build -f Dockerfile.ip -t localhost:5005/k8s_erlang_cluster:ip-0.1.0 ../..
 $ docker push -f Dockerfile.ip localhost:5005/k8s_erlang_cluster:ip-0.1.0
 ```
 
@@ -268,7 +272,7 @@ on localhost port 5005. This allows for the publishing of a Docker image for the
 example release locally in a place the kind cluster can pull from:
 
 ```shell
-$ docker build -f Dockerfile.srv -t localhost:5005/k8s_erlang_cluster:srv-0.1.0
+$ docker build -f Dockerfile.srv -t localhost:5005/k8s_erlang_cluster:srv-0.1.0 ../..
 $ docker push -f Dockerfile.srv localhost:5005/k8s_erlang_cluster:srv-0.1.0
 ```
 

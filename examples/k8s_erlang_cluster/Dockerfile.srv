@@ -1,7 +1,9 @@
 FROM erlang:27 AS builder
 
 WORKDIR /usr/src/app
-COPY . /usr/src/app
+COPY examples/k8s_erlang_cluster/ /usr/src/app/
+COPY src/ /usr/src/app/_checkouts/gen_cluster/src/
+COPY rebar.config /usr/src/app/_checkouts/gen_cluster/
 
 RUN rebar3 as srv_prod tar
 

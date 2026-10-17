@@ -118,7 +118,7 @@ jobs:
         pushd examples/k8s_erlang_cluster
         ctlptl apply -f cluster.yaml
 
-        docker build -f Dockerfile.ip -t localhost:5005/k8s_erlang_cluster:ip-0.1.0 .
+        docker build -f Dockerfile.ip -t localhost:5005/k8s_erlang_cluster:ip-0.1.0 ../..
         docker push localhost:5005/k8s_erlang_cluster:ip-0.1.0
 
         kubectl apply -k deployment/base
@@ -149,7 +149,7 @@ jobs:
         ctlptl delete -f cluster.yaml
         ctlptl apply -f cluster.yaml
 
-        docker build -f Dockerfile.srv -t localhost:5005/k8s_erlang_cluster:srv-0.1.0 .
+        docker build -f Dockerfile.srv -t localhost:5005/k8s_erlang_cluster:srv-0.1.0 ../..
         docker push localhost:5005/k8s_erlang_cluster:srv-0.1.0
 
         kubectl apply -k deployment/overlays/srv
