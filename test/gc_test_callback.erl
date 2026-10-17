@@ -12,9 +12,9 @@ peers(#{owner := Owner}=Config) ->
 members(Config) ->
     sets:from_list(maps:get(members, Config, []), [{version, 2}]).
 
-connect(Peer, #{owner := Owner}) ->
+connect(Peer, #{owner := Owner}=Config) ->
     Owner ! {connect, self(), Peer},
-    true.
+    maps:get(connect_result, Config, true).
 
 disconnect(_, _) ->
     true.

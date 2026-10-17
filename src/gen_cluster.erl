@@ -116,7 +116,11 @@ handle_refresh(Data=#data{discovery=Discovery,
                           dist=Dist}) ->
     Members = run_callback(Dist, members, []),
     FoundPeers = run_callback(Discovery, peers, []),
-    ToConnect = sets:subtract(FoundPeers, Members),
+    MemberNodes = sets:from_list([Node || #{node := Node} <- sets:to_list(Members)],
+                                [{version, 2}]),
+    ToConnect = sets:filter(fun(#{node := Node}) ->
+                                   not sets:is_element(Node, MemberNodes)
+                           end, FoundPeers),
     _ = sets:fold(fun(Peer, _) ->
                           maybe_connect(Peer, Members, Dist)
                   end, [], ToConnect),
