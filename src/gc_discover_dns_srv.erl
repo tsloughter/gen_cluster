@@ -63,6 +63,8 @@ each DNS query can take (defaults to 5000 milliseconds).
                 ip_record_type :: gc_discover_dns:ip_record_type(),
                 lookup_timeout :: erlang:timeout()}).
 
+-include_lib("kernel/include/inet.hrl").
+
 -spec init(options()) -> {ok, #state{}}.
 init(Opts=#{domain := Domain}) ->
     Timeout = maps:get(lookup_timeout, Opts, 5000),
@@ -84,7 +86,7 @@ peers(#state{node_name=NodeName,
              lookup_timeout=Timeout}) ->
     Set = sets:new([{version, 2}]),
     case inet_res:getbyname(Domain, srv, Timeout) of
-        {ok, {hostent, _, _, _, _, Hosts}} ->
+        {ok, #hostent{h_addr_list=Hosts}} ->
             %% the `is_list' is for making eqwalizer happy
             lists:foldl(fun({_, _, Port, Host}, PeersAcc) when is_list(Host) ->
                                 handle_host(Host, Port, IPRecordType, NodeName, HostType, Timeout, PeersAcc)
@@ -119,7 +121,7 @@ parse_host(Host, IPRecordType, ip, Timeout) ->
     case inet_res:getbyname(Host, IPRecordType, Timeout) of
         {error, _}=Error ->
             Error;
-        {ok, {hostent, _, _, _, _, IPs}} ->
+        {ok, #hostent{h_addr_list=IPs}} ->
             {ok, [Address || IP <- IPs, {ok, Address} <- [parse_ip(IP)]]}
     end;
 parse_host(Host, _, hostname, _) ->
