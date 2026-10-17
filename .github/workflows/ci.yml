@@ -39,6 +39,9 @@ jobs:
     - name: Compile
       run: rebar3 compile
 
+    - name: EUnit
+      run: rebar3 eunit
+
     # - name: Common Test tests
     #   run: rebar3 ct --cover
 

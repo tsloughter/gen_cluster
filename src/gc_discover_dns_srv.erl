@@ -99,9 +99,9 @@ peers(#state{node_name=NodeName,
                  -> gen_cluster:peers().
 handle_host(Host, Port, IPRecordType, NodeName, HostType, Peers) ->
     case parse_host(Host, IPRecordType, HostType) of
-        {ok, Host} ->
+        {ok, ResolvedHost} ->
             %% elp:ignore W0023
-            Node = list_to_atom(string:join([NodeName, Host], "@")),
+            Node = list_to_atom(string:join([NodeName, ResolvedHost], "@")),
             sets:add_element(#{node => Node,
                                port => Port}, Peers);
         {error, _} ->
