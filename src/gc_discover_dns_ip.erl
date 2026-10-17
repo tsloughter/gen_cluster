@@ -5,7 +5,7 @@ uses all the returned hosts as peers to connect or reconnect to. Whether
 to use the IP or the hostname associated with each IP result is configured with
 the option `host_type` which takes `ip` or `hostname` as values. The default
 is `ip` which uses the IP as is in the node name. When it
-is `hostname` each returned IP is passed to `inet_res:gethostbyaddr/1`
+is `hostname` each returned IP is passed to `inet_res:gethostbyaddr/2`
 to get a hostname for the address.
 
 Since this is a built-in discovery module it has an alias, `dns`, which
@@ -86,7 +86,7 @@ peers(#state{node_name=NodeName,
     case inet_res:getbyname(Domain, IPRecordType, Timeout) of
         {ok, #hostent{h_addr_list=IPs}} ->
             lists:foldl(fun(IP, PeersAcc) ->
-                                handle_ip(IP, NodeName, HostType, PeersAcc)
+                                handle_ip(IP, NodeName, HostType, Timeout, PeersAcc)
                         end, Set, IPs);
         {error, _} ->
             Set
@@ -94,10 +94,11 @@ peers(#state{node_name=NodeName,
 
 %%
 
--spec handle_ip(inet:ip_address(), gc_discover_dns:dns_name(), gc_discover_dns:host_type(), gen_cluster:peers())
+-spec handle_ip(inet:ip_address(), gc_discover_dns:dns_name(), gc_discover_dns:host_type(),
+                erlang:timeout(), gen_cluster:peers())
                -> gen_cluster:peers().
-handle_ip(IP, NodeName, HostType, PeersAcc) ->
-    case parse_ip(IP, HostType) of
+handle_ip(IP, NodeName, HostType, Timeout, PeersAcc) ->
+    case parse_ip(IP, HostType, Timeout) of
         {ok, Host} ->
             %% elp:ignore W0023
             Node = list_to_atom(string:join([NodeName, Host], "@")),
@@ -107,16 +108,17 @@ handle_ip(IP, NodeName, HostType, PeersAcc) ->
             PeersAcc
     end.
 
--spec parse_ip(inet:ip_address(), gc_discover_dns:host_type()) -> {ok, string()} | {error, term()}.
-parse_ip(IP, HostType) when HostType =:= ip orelse HostType =:= ipv6 ->
+-spec parse_ip(inet:ip_address(), gc_discover_dns:host_type(), erlang:timeout())
+              -> {ok, string()} | {error, term()}.
+parse_ip(IP, HostType, _) when HostType =:= ip orelse HostType =:= ipv6 ->
     case inet:ntoa(IP) of
         {error, einval} ->
             {error, einval};
         String ->
             {ok, String}
     end;
-parse_ip(IP, hostname) ->
-    case inet_res:gethostbyaddr(IP) of
+parse_ip(IP, hostname, Timeout) ->
+    case inet_res:gethostbyaddr(IP, Timeout) of
         {ok, #hostent{h_name=Host}} ->
             {ok, to_string(Host)};
         {error, _}=Error ->

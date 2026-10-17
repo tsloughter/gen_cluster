@@ -58,6 +58,20 @@ hostname_target_test() ->
         ?assertEqual(expected_peers(["target.gc.test"]), gc_discover_dns_srv:peers(State))
     end).
 
+target_lookup_timeout_test() ->
+    Records = #{{"_cluster._tcp.gc.test", 33} =>
+                    [gc_test_dns:srv(12345, "timeout.gc.test"),
+                     gc_test_dns:srv(12345, "healthy.gc.test")],
+                {"timeout.gc.test", 1} => drop,
+                {"healthy.gc.test", 1} => [<<10, 0, 0, 1>>]},
+    gc_test_dns:with_records(Records, fun() ->
+        {ok, State} = gc_discover_dns_srv:init(#{domain => "_cluster._tcp.gc.test",
+                                               host_type => ip, lookup_timeout => 100}),
+        {Elapsed, Peers} = timer:tc(gc_discover_dns_srv, peers, [State]),
+        ?assert(Elapsed < 1000000),
+        ?assertEqual(expected_peers(["10.0.0.1"]), Peers)
+    end).
+
 expected_peers(Hosts) ->
     [NodeName, _] = string:split(atom_to_list(node()), "@"),
     sets:from_list([#{node => list_to_atom(NodeName ++ "@" ++ Host), port => 12345}

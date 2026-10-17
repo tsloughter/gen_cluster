@@ -1,6 +1,6 @@
 -module(gc_test_dns).
 
--export([with_records/2, srv/2]).
+-export([with_records/2, srv/2, ptr/1]).
 
 %% Exercise the real resolver against a loopback DNS server. Tests using this
 %% helper must run sequentially because resolver configuration is VM-wide.
@@ -32,6 +32,9 @@ with_records(Records, Fun) ->
 
 srv(Port, Host) ->
     <<0:16, 0:16, Port:16, (name(Host))/binary>>.
+
+ptr(Host) ->
+    name(Host).
 
 serve(Socket, Records) ->
     receive

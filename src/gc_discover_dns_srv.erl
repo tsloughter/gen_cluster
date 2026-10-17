@@ -86,7 +86,7 @@ peers(#state{node_name=NodeName,
         {ok, {hostent, _, _, _, _, Hosts}} ->
             %% the `is_list' is for making eqwalizer happy
             lists:foldl(fun({_, _, Port, Host}, PeersAcc) when is_list(Host) ->
-                                handle_host(Host, Port, IPRecordType, NodeName, HostType, PeersAcc)
+                                handle_host(Host, Port, IPRecordType, NodeName, HostType, Timeout, PeersAcc)
                         end, Set, Hosts);
         {error, _} ->
             Set
@@ -95,10 +95,11 @@ peers(#state{node_name=NodeName,
 %%
 
 -spec handle_host(gc_discover_dns:dns_name(), integer(), gc_discover_dns:ip_record_type(),
-                  gc_discover_dns:dns_name(), gc_discover_dns:host_type(), gen_cluster:peers())
+                  gc_discover_dns:dns_name(), gc_discover_dns:host_type(), erlang:timeout(),
+                  gen_cluster:peers())
                  -> gen_cluster:peers().
-handle_host(Host, Port, IPRecordType, NodeName, HostType, Peers) ->
-    case parse_host(Host, IPRecordType, HostType) of
+handle_host(Host, Port, IPRecordType, NodeName, HostType, Timeout, Peers) ->
+    case parse_host(Host, IPRecordType, HostType, Timeout) of
         {ok, ResolvedHosts} ->
             lists:foldl(fun(ResolvedHost, Acc) ->
                                 %% elp:ignore W0023
@@ -110,16 +111,17 @@ handle_host(Host, Port, IPRecordType, NodeName, HostType, Peers) ->
             Peers
     end.
 
--spec parse_host(gc_discover_dns:dns_name(), gc_discover_dns:ip_record_type(), gc_discover_dns:host_type())
+-spec parse_host(gc_discover_dns:dns_name(), gc_discover_dns:ip_record_type(),
+                 gc_discover_dns:host_type(), erlang:timeout())
                 -> {ok, [string()]} | {error, term()}.
-parse_host(Host, IPRecordType, ip) ->
-    case inet_res:getbyname(Host, IPRecordType, 5000) of
+parse_host(Host, IPRecordType, ip, Timeout) ->
+    case inet_res:getbyname(Host, IPRecordType, Timeout) of
         {error, _}=Error ->
             Error;
         {ok, {hostent, _, _, _, _, IPs}} ->
             {ok, [Address || IP <- IPs, {ok, Address} <- [parse_ip(IP)]]}
     end;
-parse_host(Host, _, hostname) ->
+parse_host(Host, _, hostname, _) ->
     {ok, [Host]}.
 
 parse_ip(IP) ->
