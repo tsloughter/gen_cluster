@@ -121,18 +121,9 @@ handle_refresh(Data=#data{discovery=Discovery,
     ToConnect = sets:filter(fun(#{node := Node}) ->
                                    not sets:is_element(Node, MemberNodes)
                            end, FoundPeers),
-    _ = sets:fold(fun(Peer, _) ->
-                          maybe_connect(Peer, Members, Dist)
-                  end, [], ToConnect),
+    lists:foreach(fun(Peer) -> run_callback(Dist, connect, [Peer]) end,
+                  sets:to_list(ToConnect)),
     Data.
-
-maybe_connect(Peer, Members, Dist) ->
-    case sets:is_element(Peer, Members) of
-        false ->
-            run_callback(Dist, connect, [Peer]);
-        true ->
-            false
-    end.
 
 -spec nodes_to_peers([node()]) -> peers().
 nodes_to_peers(Nodes) ->
