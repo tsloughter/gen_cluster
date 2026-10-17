@@ -49,10 +49,11 @@ can be `ip` or `hostname`, the optional boolean `ipv6` for whether to query for 
 `AAAA` record when `host_type` is `ip` and optional `lookup_timeout` which is the time
 each DNS query can take (defaults to 5000 milliseconds).
 ".
--type options() :: #{domain      := string(), %% unexported: inet_res:dns_name(),
-                     host_type   => gc_discover_dns:host_type(),
-                     ipv6        => boolean(),
-                     lookup_opts => [inet_res:res_option()]}.
+-type options() :: #{domain         := gc_discover_dns:dns_name(),
+                     record_type    => srv,
+                     host_type      => gc_discover_dns:host_type(),
+                     ipv6           => boolean(),
+                     lookup_timeout => erlang:timeout()}.
 
 -export_type([options/0]).
 

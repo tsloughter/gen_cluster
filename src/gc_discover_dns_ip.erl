@@ -49,6 +49,7 @@ can be `ip` or `hostname`, a boolean `ipv6` for whether to query for `A` or
 `AAAA` records and `lookup_timeout` which is the time each DNS query can take.
 ".
 -type options() :: #{domain         := gc_discover_dns:dns_name(),
+                     record_type    => ip,
                      host_type      => gc_discover_dns:host_type(),
                      ipv6           => boolean(),
                      lookup_timeout => erlang:timeout()}.

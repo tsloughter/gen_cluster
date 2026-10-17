@@ -24,8 +24,8 @@ functions at a configurable interval.
 -type option() :: {discovery,
                    builtin_discovery() |
                    {module(), term()}} |
-                  {dist, module()} |
-                  {refresh_interval_ms, integer() | undefined}.
+                  {dist, {module(), term()}} |
+                  {refresh_interval_ms, erlang:timeout()}.
 
 -type config() :: [option()].
 
@@ -44,7 +44,7 @@ functions at a configurable interval.
 
 -record(data, {discovery           :: {module(), cb_state()},
                dist                :: {module(), cb_state()},
-               refresh_interval_ms :: integer() | infinity}).
+               refresh_interval_ms :: erlang:timeout()}).
 
 -define(DEFAULT_REFRESH_INTERVAL_MS, 5000).
 
