@@ -23,6 +23,20 @@ infinity_disables_periodic_refresh_test() ->
         end
     end).
 
+code_change_preserves_state_and_refresh_test() ->
+    with_cluster(30, #{}, fun(Pid) ->
+        await_refresh(Pid),
+        Before = sys:get_state(Pid),
+        ok = sys:suspend(Pid),
+        try
+            ?assertEqual(ok, sys:change_code(Pid, gen_cluster, old_version, []))
+        after
+            ok = sys:resume(Pid)
+        end,
+        ?assertEqual(Before, sys:get_state(Pid)),
+        await_refresh(Pid)
+    end).
+
 with_cluster(Interval, Options, Fun) ->
     Config = Options#{owner => self()},
     {ok, Pid} = gen_cluster:start_link([{discovery, {gc_test_callback, Config}},

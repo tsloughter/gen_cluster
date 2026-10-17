@@ -75,8 +75,8 @@ active(_EventType, _EventContent, _Data) ->
 terminate(_Reason, _State, _Data) ->
     ok.
 
-code_change(_, _OldState, Data, _) ->
-    {ok, Data}.
+code_change(_, State, Data, _) ->
+    {ok, State, Data}.
 
 %% Internal functions
 
