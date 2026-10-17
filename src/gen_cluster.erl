@@ -62,13 +62,13 @@ init([Configuration]) ->
 
 inactive(internal, refresh, Data=#data{refresh_interval_ms=RefreshIntervalMs}) ->
     Data1 = handle_refresh(Data),
-    {next_state, active, Data1, [{timeout, RefreshIntervalMs, refresh}]};
+    {next_state, active, Data1, [{{timeout, refresh}, RefreshIntervalMs, refresh}]};
 inactive(_EventType, _EventContent, _Data) ->
     keep_state_and_data.
 
-active(timeout, refresh, Data=#data{refresh_interval_ms=RefreshIntervalMs}) ->
+active({timeout, refresh}, refresh, Data=#data{refresh_interval_ms=RefreshIntervalMs}) ->
     Data1 = handle_refresh(Data),
-    {keep_state, Data1, [{timeout, RefreshIntervalMs, refresh}]};
+    {keep_state, Data1, [{{timeout, refresh}, RefreshIntervalMs, refresh}]};
 active(_EventType, _EventContent, _Data) ->
     keep_state_and_data.
 
